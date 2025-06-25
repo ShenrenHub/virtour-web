@@ -1,5 +1,6 @@
 import { Debugger } from './debugger.ts'
 import { playAudio } from './audio'
+import type { Pannellum } from '@/utils/Global.ts'
 
 declare const parent: any
 declare const Module: any
@@ -91,6 +92,7 @@ export default DigitalHuman
 
 declare global {
   interface Window {
+    selectedDhlive: Ref<UnwrapRef<string>, UnwrapRef<string> | string>
     Module?: {
       _malloc: (size: number) => number
       _setAudioBuffer: (ptr: number, length: number) => void
@@ -98,5 +100,8 @@ declare global {
       HEAPU8: Uint8Array
       // You can add other functions or properties as needed.
     }
+    pannellum: Pannellum
+    innerWidth: number
+    addEventListener(message1: string, param2: (event) => void): void
   }
 }

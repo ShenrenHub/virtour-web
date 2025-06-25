@@ -1,6 +1,29 @@
 <script setup lang="ts">
 import { id2name } from '@/utils/PositionTranslator.ts'
+import { watch } from 'vue'
+/**
+ * 全局设置与选择数字人形象
+ */
+const settings = reactive({
+  autoJumping: true, // 是否让MCP自动跳转到景点
+})
+const selectedDhlive = ref('青年') // 默认选择的数字人形象
 
+onMounted(() => {
+  window.selectedDhlive = selectedDhlive
+})
+
+watch(selectedDhlive, (val) => {
+  window.selectedDhlive = val
+  // 通知 iframe
+  const iframe = document.querySelector('iframe')
+  iframe?.contentWindow?.postMessage({ type: 'selectedDhliveChanged', value: val }, '*')
+})
+
+
+/**
+ * 兼容性检测
+ */
 if (typeof VideoDecoder !== 'undefined') {
   // 使用 VideoDecoder 正常播放
 } else {
@@ -9,7 +32,7 @@ if (typeof VideoDecoder !== 'undefined') {
   // firefox
 }
 
-import { type CSSProperties } from 'vue'
+import { type CSSProperties, reactive } from 'vue'
 
 import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
 import DigitalHuman from '@/dh_controller/controller.ts'
@@ -59,7 +82,7 @@ onMounted(async () => {
     scenes: {
       default: {
         type: 'equirectangular',
-        panorama: '/img/scene/封面.jpg', // 替换为第一张全景图路径
+        panorama: `${backendUrl}/assets/cover.jpg`, // 替换为第一张全景图路径
         yaw: 0, // 初始水平视角
         pitch: 40.86, // 初始垂直视角
         hfov: 80,
@@ -81,13 +104,8 @@ onMounted(async () => {
   viewer = window.pannellum.viewer(panorama_map.value as HTMLElement, config)
 })
 
-interface Window {
-  pannellum: Pannellum
-  innerWidth: number
-}
-
 const moveToById = async (id: string) => {
-  console.log("Moving to position with ID:", id)
+  console.log('Moving to position with ID:', id)
   viewer.loadScene(id, 0, 0, 70)
 }
 
@@ -96,23 +114,33 @@ const moveToById = async (id: string) => {
  */
 const pageLoading = ref(true)
 const pageLoadProgress = ref(0)
-let progress = 0
-const loadingProgress = setInterval(() => {
-  // console.log(dh.value)
-  try {
-    progress = dh.value.contentWindow.dhLoadingProgress
-    // console.log('从Iframe中获取到：', progress)
-  } catch (e) {
-    progress = 0
-  }
-  // console.log('progress:', progress)
-  // 如果progress为1则移除当前interval
-  pageLoadProgress.value = progress
-  if (progress === 1) {
-    pageLoading.value = false
-    clearInterval(loadingProgress)
-  }
-}, 10)
+let progress = ref(0)
+onMounted(() => {
+  (window as Window).addEventListener('message', (event) => {
+    if (event.data?.type === 'progress') {
+      progress.value = Math.round(event.data.value * 100);
+      if (progress.value >= 100) {
+        pageLoading.value = false;
+      }
+    }
+  });
+});
+// const loadingProgress = setInterval(() => {
+//   // console.log(dh.value)
+//   try {
+//     progress = dh.value.contentWindow.dhLoadingProgress
+//     // console.log('从Iframe中获取到：', progress)
+//   } catch (e) {
+//     progress = 0
+//   }
+//   // console.log('progress:', progress)
+//   // 如果progress为1则移除当前interval
+//   pageLoadProgress.value = progress
+//   if (progress === 1) {
+//     pageLoading.value = false
+//     clearInterval(loadingProgress)
+//   }
+// }, 10)
 
 const dh = ref()
 /*       聊天框相关控件       */
@@ -228,9 +256,7 @@ const sendTextMessage = async () => {
 /**
  * 推荐显示窗
  * */
-const recommendationImages: Position[] = [
-
-]
+const recommendationImages: Position[] = []
 
 const loadRecommendation = async () => {
   const positions = await getPosition()
@@ -259,7 +285,18 @@ const suggested_position_id = ref('')
 //     (item) => item.action === suggested_position,
 //   )
 // }
-const showSnackbar = async ({ position_name, position_id }: { position_name: string; position_id: string }) => {
+const showSnackbar = async ({
+  position_name,
+  position_id,
+}: {
+  position_name: string
+  position_id: string
+}) => {
+  // 如果设置了自动跳转，并且位置名称不为空，则自动跳转
+  if (settings.autoJumping && position_name !== 'None') {
+    await moveToById(position_id)
+    return
+  }
   if (position_name === 'None' || position_id.includes('Error')) {
     console.log('建议为空或者请求出错')
     return
@@ -403,7 +440,15 @@ const imageStyle = computed(() => {
         <v-tabs-window-item value="four">
           <v-card>
             <v-card-text>
-              <p>设置功能待开发...</p>
+              <p>设置选项</p>
+
+              <v-select
+                label="选择数字人形象"
+                :items="['儿童', '青年', '中年']"
+                v-model="selectedDhlive"
+              />
+
+              <v-switch label="启用自动跳转景点" v-model="settings.autoJumping" />
             </v-card-text>
           </v-card>
         </v-tabs-window-item>
@@ -412,7 +457,9 @@ const imageStyle = computed(() => {
   </v-card>
   <v-snackbar v-model="snackbar" style="z-index: 100000">
     <p>建议前往 {{ suggested_position_name }}</p>
-    <v-btn variant="text" style="width: 100%" @click="moveToById(suggested_position_id)">带我去吧</v-btn>
+    <v-btn variant="text" style="width: 100%" @click="moveToById(suggested_position_id)"
+      >带我去吧</v-btn
+    >
     <template v-slot:actions>
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>
@@ -420,6 +467,7 @@ const imageStyle = computed(() => {
   <!--  遮罩层-->
   <v-overlay :model-value="pageLoading" class="align-center justify-center" style="z-index: 999999">
     <v-progress-circular indeterminate color="white" />
+
   </v-overlay>
 </template>
 <style scoped>

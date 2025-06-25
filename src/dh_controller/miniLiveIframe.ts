@@ -1,7 +1,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 export function useMiniLiveIframe() {
-  const iframeSrc = ref('/MiniLive.html')
+  const iframeSrc = ref('/dhlive/MiniLive.html')
   const iframeContainer = ref<HTMLIFrameElement | null>(null)
   const iframeWidth = ref(101.5)
   const iframeHeight = ref(180)
