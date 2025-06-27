@@ -1,6 +1,6 @@
 import controller from './controller.ts'
 import DigitalHuman from './controller.ts'
-import { backendUrl } from '@/utils/Global'
+import { backendUrl, VoiceTimbre } from '@/utils/Global'
 
 // 定义返回数据的类型
 interface StreamChunk {
@@ -10,15 +10,20 @@ interface StreamChunk {
 }
 
 // 传入iframeWindow是iframe的对象
-export async function getAndPlayAudio(message: string, iframeWindow: any): Promise<void> {
+export async function getAndPlayAudio(
+  message: string,
+  iframeWindow: any,
+  voice_timbre: VoiceTimbre,
+): Promise<void> {
   console.log(iframeWindow, 'iframeWindow')
   const query = message
-
+  voice_timbre = <VoiceTimbre>Object.keys(VoiceTimbre).find(key => VoiceTimbre[key as keyof typeof VoiceTimbre] === voice_timbre)
+  console.warn(JSON.stringify({ query, voice_timbre }));
   try {
     const response = await fetch(`${backendUrl}/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
+      body: JSON.stringify({ query, voice_timbre }),
     })
 
     if (!response.ok) {
@@ -58,7 +63,7 @@ export async function playAudio(audioData: ArrayBuffer): Promise<void> {
       },
       (error: DOMException) => {
         reject(error)
-      }
+      },
     )
   })
 }

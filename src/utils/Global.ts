@@ -19,10 +19,10 @@ let positions: Position[] = []
 
 export const getPosition: () => Promise<Position[]> = async () => {
   if (positions.length > 0) {
-    console.log("Hit! Using cached positions.")
+    console.log('Hit! Using cached positions.')
     return positions
   }
-  console.log("Miss! Fetching positions from backend.")
+  console.log('Miss! Fetching positions from backend.')
   const url = `${backendUrl}/assets/positions.json`
   const headers = {
     'Content-Type': 'application/json',
@@ -86,4 +86,13 @@ export interface Pannellum {
   addScene(sceneI: string, config: scene): Pannellum
 
   viewer(container: HTMLElement, config: Config): Pannellum
+}
+
+/**
+ * 此定义来自后端
+ */
+export enum VoiceTimbre {
+  TEENAGER = '青少年',
+  ADULT = '青壮年',
+  ELDERLY = '中老年',
 }

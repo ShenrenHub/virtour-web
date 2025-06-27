@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { id2name } from '@/utils/PositionTranslator.ts'
 import { watch } from 'vue'
+
 /**
  * 全局设置与选择数字人形象
  */
 const settings = reactive({
   autoJumping: true, // 是否让MCP自动跳转到景点
 })
-const selectedDhlive = ref('青年') // 默认选择的数字人形象
+const selectedDhlive = ref(VoiceTimbre.ADULT) // 默认选择的数字人形象
 
 onMounted(() => {
   window.selectedDhlive = selectedDhlive
@@ -19,7 +20,6 @@ watch(selectedDhlive, (val) => {
   const iframe = document.querySelector('iframe')
   iframe?.contentWindow?.postMessage({ type: 'selectedDhliveChanged', value: val }, '*')
 })
-
 
 /**
  * 兼容性检测
@@ -44,6 +44,7 @@ import {
   getPosition,
   type Pannellum,
   type Position,
+  VoiceTimbre,
 } from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
 
@@ -116,15 +117,15 @@ const pageLoading = ref(true)
 const pageLoadProgress = ref(0)
 let progress = ref(0)
 onMounted(() => {
-  (window as Window).addEventListener('message', (event) => {
+  ;(window as Window).addEventListener('message', (event) => {
     if (event.data?.type === 'progress') {
-      progress.value = Math.round(event.data.value * 100);
+      progress.value = Math.round(event.data.value * 100)
       if (progress.value >= 100) {
-        pageLoading.value = false;
+        pageLoading.value = false
       }
     }
-  });
-});
+  })
+})
 // const loadingProgress = setInterval(() => {
 //   // console.log(dh.value)
 //   try {
@@ -186,14 +187,14 @@ const stopRecording = async () => {
       }).then()
     }
   })().then(() => {})
-
   // 获取语音
+  const voice_timbre = <VoiceTimbre>Object.keys(VoiceTimbre).find(key => VoiceTimbre[key as keyof typeof VoiceTimbre] === selectedDhlive.value)
   await fetch(`${backendUrl}/voice_ask`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ recording: base64Recording }),
+    body: JSON.stringify({ recording: base64Recording, voice_timbre }),
   })
     .then((response) => {
       if (response.ok) {
@@ -242,7 +243,7 @@ const sendTextMessage = async () => {
           }).then()
         }
       })().then(() => {})
-      await getAndPlayAudio(message.value, dhIframe)
+      await getAndPlayAudio(message.value, dhIframe, selectedDhlive.value as VoiceTimbre)
       message.value = '' // 清空输入框
     } catch (e) {
       console.error('获取音频失败:', e)
@@ -444,7 +445,7 @@ const imageStyle = computed(() => {
 
               <v-select
                 label="选择数字人形象"
-                :items="['儿童', '青年', '中年']"
+                :items="[VoiceTimbre.TEENAGER, VoiceTimbre.ADULT, VoiceTimbre.ELDERLY]"
                 v-model="selectedDhlive"
               />
 
@@ -458,8 +459,8 @@ const imageStyle = computed(() => {
   <v-snackbar v-model="snackbar" style="z-index: 100000">
     <p>建议前往 {{ suggested_position_name }}</p>
     <v-btn variant="text" style="width: 100%" @click="moveToById(suggested_position_id)"
-      >带我去吧</v-btn
-    >
+      >带我去吧
+    </v-btn>
     <template v-slot:actions>
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>
@@ -467,7 +468,6 @@ const imageStyle = computed(() => {
   <!--  遮罩层-->
   <v-overlay :model-value="pageLoading" class="align-center justify-center" style="z-index: 999999">
     <v-progress-circular indeterminate color="white" />
-
   </v-overlay>
 </template>
 <style scoped>

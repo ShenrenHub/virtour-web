@@ -232,11 +232,11 @@ window.addEventListener('message', async (event) => {
     isPaused = true;
     document.getElementById('startMessage').style.display = 'block';
     const dh_type = event.data.value;
-    if (dh_type === '儿童'){
+    if (dh_type === '青少年'){
       asset_dir = "assets-child";
-    }else if (dh_type === '青年') {
+    }else if (dh_type === '青壮年') {
       asset_dir = "assets-teenager";
-    }else if (dh_type === '中年') {
+    }else if (dh_type === '中老年') {
       asset_dir = "assets-elder";
     }else {
       console.error('Unknown character type:', dh_type);
