@@ -57,11 +57,15 @@ interface scene {
 export interface Position {
   id: string
   name: string
-  latitude: number
-  longitude: number
   action: string
   img: string
   recommend_picture: string
+  extra: [
+    {
+      extra_name: string
+      extra_img: string
+    }
+  ]
 }
 
 export interface Config {

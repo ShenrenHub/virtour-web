@@ -20,6 +20,9 @@ watch(selectedDhlive, (val) => {
   const iframe = document.querySelector('iframe')
   iframe?.contentWindow?.postMessage({ type: 'selectedDhliveChanged', value: val }, '*')
 })
+/**
+ * Extra图片
+ */
 
 /**
  * 兼容性检测
@@ -47,6 +50,7 @@ import {
   VoiceTimbre,
 } from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
+import { Debugger } from '@/dh_controller/debugger.ts'
 
 /**
  * 数字人
@@ -188,7 +192,11 @@ const stopRecording = async () => {
     }
   })().then(() => {})
   // 获取语音
-  const voice_timbre = <VoiceTimbre>Object.keys(VoiceTimbre).find(key => VoiceTimbre[key as keyof typeof VoiceTimbre] === selectedDhlive.value)
+  const voice_timbre = <VoiceTimbre>(
+    Object.keys(VoiceTimbre).find(
+      (key) => VoiceTimbre[key as keyof typeof VoiceTimbre] === selectedDhlive.value,
+    )
+  )
   await fetch(`${backendUrl}/voice_ask`, {
     method: 'POST',
     headers: {
@@ -268,11 +276,6 @@ const loadRecommendation = async () => {
 }
 
 loadRecommendation()
-
-const handleRecommendationClick = (action: string) => {
-  console.log('执行操作：', action)
-  viewer.loadScene(action, 0, 0, 70)
-}
 
 /**
  * 提示
@@ -359,11 +362,43 @@ const imageStyle = computed(() => {
 
   <!--  聊天窗口  -->
   <v-card
+    id="chat-box"
     class="chat-box"
     width="100%"
     style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2"
     :loading="textFieldLoading || isQuerying"
   >
+    <!-- 悬浮按钮 -->
+    <v-fab
+      :key="'absolute'"
+      :absolute="true"
+      :color="'primary'"
+      :location="'end top'"
+      size="large"
+      id="fab"
+      name="fab"
+      icon
+      style="top: -20px;z-index:1000"
+    >
+      <v-icon>{{ 'mdi-crown' }}</v-icon>
+      <v-speed-dial :location="'top center'" :transition="'scale-transition'" activator="parent">
+        <v-btn key="1" color="success" icon>
+          <v-icon size="24">$success</v-icon>
+        </v-btn>
+
+        <v-btn key="2" color="info" icon>
+          <v-icon size="24">$info</v-icon>
+        </v-btn>
+
+        <v-btn key="3" color="warning" icon>
+          <v-icon size="24">$warning</v-icon>
+        </v-btn>
+
+        <v-btn key="4" color="error" icon>
+          <v-icon size="24">$error</v-icon>
+        </v-btn>
+      </v-speed-dial>
+    </v-fab>
     <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">
       <span style="margin-left: 10px">说话中...</span>
     </v-alert>
