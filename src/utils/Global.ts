@@ -44,6 +44,13 @@ export const getPosition: () => Promise<Position[]> = async () => {
     .catch((error) => {
       console.error('There was a problem with the fetch operation:', error)
     })
+  for (const pos of positions) {
+    if (pos.extra) {
+      for (const extra of pos.extra) {
+        extra.extra_id = '_extra_' + extra.extra_id
+      }
+    }
+  }
   return positions
 }
 
@@ -53,6 +60,12 @@ interface scene {
   yaw: number
   pitch: number
 }
+export type ExtraImage = {
+  extra_id: string
+  extra_name: string
+  extra_img: string
+  extra_recommend_picture: string
+}
 
 export interface Position {
   id: string
@@ -60,12 +73,7 @@ export interface Position {
   action: string
   img: string
   recommend_picture: string
-  extra: [
-    {
-      extra_name: string
-      extra_img: string
-    }
-  ]
+  extra: ExtraImage []
 }
 
 export interface Config {

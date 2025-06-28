@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { id2name } from '@/utils/PositionTranslator.ts'
-import { watch } from 'vue'
+import { type Ref, watch } from 'vue'
 
 /**
  * 全局设置与选择数字人形象
@@ -23,6 +23,8 @@ watch(selectedDhlive, (val) => {
 /**
  * Extra图片
  */
+const current_scene = ref('default') // 当前场景
+const extraImages = ref<ExtraImage[] | null>()
 
 /**
  * 兼容性检测
@@ -43,14 +45,23 @@ import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from '@/utils/MicRecorder'
 import {
   backendUrl,
-  blobToBase64,
+  blobToBase64, type ExtraImage,
   getPosition,
   type Pannellum,
   type Position,
-  VoiceTimbre,
+  VoiceTimbre
 } from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
-import { Debugger } from '@/dh_controller/debugger.ts'
+import { checkIfExtraExists } from '@/utils/ExtraSceneUtils.ts'
+import {
+  mdiDelete,
+  mdiEllipseOutline,
+  mdiMore, mdiPanoramaVariantOutline,
+  mdiPerspectiveMore,
+  mdiShareVariant,
+  mdiSkewMore,
+  mdiUnfoldMoreHorizontal
+} from '@mdi/js'
 
 /**
  * 数字人
@@ -69,15 +80,16 @@ onMounted(async () => {
   const config: {
     default: { firstScene: string; sceneFadeDuration: number }
     scenes: {
-      default: {
-        type: string
-        panorama: string
-        yaw: number
-        pitch: number
-        hfov: number
-        autoLoad: boolean
-        deviceOrientationControls: boolean
-      }
+      // default: {
+      //   type: string
+      //   panorama: string
+      //   yaw: number
+      //   pitch: number
+      //   hfov: number
+      //   autoLoad: boolean
+      //   deviceOrientationControls: boolean
+      // }& {
+      [key: string]: any
     }
   } = {
     default: {
@@ -97,7 +109,18 @@ onMounted(async () => {
     },
   }
   for (const position of positions) {
-    config['scenes'][position.id] = {
+    if (position.extra) {
+      for (const extra of position.extra) {
+        config.scenes[extra.extra_id] = {
+          type: 'equirectangular',
+          panorama: `${backendUrl}/${extra.extra_img}`,
+          yaw: 0, // 初始水平视角
+          pitch: 0, // 初始垂直视角
+          autoLoad: true,
+        }
+      }
+    }
+    config.scenes[position.id] = {
       type: 'equirectangular',
       panorama: `${backendUrl}/${position.img}`,
       yaw: 0, // 初始水平视角
@@ -110,6 +133,14 @@ onMounted(async () => {
 })
 
 const moveToById = async (id: string) => {
+  current_scene.value = id
+  for (const position of recommendationImages) {
+    if (position.id === id) {
+      if (position.extra) {
+        extraImages.value = position.extra
+      }
+    }
+  }
   console.log('Moving to position with ID:', id)
   viewer.loadScene(id, 0, 0, 70)
 }
@@ -118,7 +149,6 @@ const moveToById = async (id: string) => {
  * 遮罩层
  */
 const pageLoading = ref(true)
-const pageLoadProgress = ref(0)
 let progress = ref(0)
 onMounted(() => {
   ;(window as Window).addEventListener('message', (event) => {
@@ -365,38 +395,42 @@ const imageStyle = computed(() => {
     id="chat-box"
     class="chat-box"
     width="100%"
-    style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2"
+    style="
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      overflow: visible;
+    "
     :loading="textFieldLoading || isQuerying"
   >
     <!-- 悬浮按钮 -->
     <v-fab
-      :key="'absolute'"
+      v-if="checkIfExtraExists(recommendationImages, current_scene)"
       :absolute="true"
       :color="'primary'"
       :location="'end top'"
-      size="large"
-      id="fab"
-      name="fab"
       icon
-      style="top: -20px;z-index:1000"
+      style="top: -51px; right: 4px; z-index: 1000"
     >
-      <v-icon>{{ 'mdi-crown' }}</v-icon>
-      <v-speed-dial :location="'top center'" :transition="'scale-transition'" activator="parent">
-        <v-btn key="1" color="success" icon>
-          <v-icon size="24">$success</v-icon>
-        </v-btn>
+      <v-icon :icon="mdiUnfoldMoreHorizontal"></v-icon>
+      <v-speed-dial :location="'top center'" :transition="'slide-x-transition'" activator="parent">
+        <div
+          v-for="extra of extraImages"
+          :key="extra.extra_id"
+          @click="moveToById(extra.extra_id)"
+        >
+          <v-img
+            :src="`${backendUrl}/${extra.extra_recommend_picture}`"
+            :alt="extra.extra_name"
+            :style="imageStyle"
+            style="border-radius: 10px;box-shadow: 0 4px 8px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.06);cursor:pointer"
 
-        <v-btn key="2" color="info" icon>
-          <v-icon size="24">$info</v-icon>
-        </v-btn>
-
-        <v-btn key="3" color="warning" icon>
-          <v-icon size="24">$warning</v-icon>
-        </v-btn>
-
-        <v-btn key="4" color="error" icon>
-          <v-icon size="24">$error</v-icon>
-        </v-btn>
+            cover
+            class="hover-effect"
+          />
+        </div>
       </v-speed-dial>
     </v-fab>
     <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">

@@ -568,10 +568,10 @@
   resolved "https://registry.npmjs.org/@material-design-icons/font/-/font-0.14.15.tgz"
   integrity sha512-h4YFZnYxNuciEKR0jAOekaQmIg2UGUSxbnoyzo4OdE42gy9QB3UnrjLcASiDy9ra8fqrcHy+NqxTHx7F86BH0A==
 
-"@mdi/font@^7.4.47":
+"@mdi/js@^7.4.47":
   version "7.4.47"
-  resolved "https://registry.npmjs.org/@mdi/font/-/font-7.4.47.tgz"
-  integrity sha512-43MtGpd585SNzHZPcYowu/84Vz2a2g31TvPMTm9uTiCSWzaheQySUcSyUH/46fPnuPQWof2yd0pGBtzee/IQWw==
+  resolved "https://registry.yarnpkg.com/@mdi/js/-/js-7.4.47.tgz#7d8a4edc9631bffeed80d1ec784f9beae559a76a"
+  integrity sha512-KPnNOtm5i2pMabqZxpUz7iQf+mfrYZyKCZ8QNz85czgEt7cuHcGorWfdzUMWYA0SD+a6Hn4FmJ+YhzzzjkTZrQ==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -881,6 +881,10 @@
   version "22.0.1"
   resolved "https://registry.npmjs.org/@tsconfig/node22/-/node22-22.0.1.tgz"
   integrity sha512-VkgOa3n6jvs1p+r3DiwBqeEwGAwEvnVCg/hIjiANl5IEcqP3G0u5m8cBJspe1t9qjZRlZ7WFgqq5bJrGdgAKMg==
+
+"@types/@jamescoyle/vue-icon":
+  version "0.1.2"
+  resolved "https://codeload.github.com/jamescoyle/vue-icon/tar.gz/d3f792a4517077124e2902e74d8b51db53dbfd9c"
 
 "@types/estree@1.0.7", "@types/estree@^1.0.0", "@types/estree@^1.0.6":
   version "1.0.7"

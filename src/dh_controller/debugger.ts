@@ -1,7 +1,7 @@
 export class Debugger {
-    static log(message: string) {
+    static log(...message: any[]) {
         const time = new Date().toLocaleTimeString();
-        console.log("[DH_Live][" + time + "] " + message);
+        console.log("[DH_Live][" , time , "] " , message);
     }
 
     static warn(message: string) {
